@@ -160,3 +160,11 @@ export interface HistoryItem {
   result: GenerationResult;
   createdAt: string;
 }
+
+// ===== テンプレート =====
+export interface Template {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: string;
+}

@@ -1,10 +1,13 @@
-import type { ArticleSettings as Settings, Tone, ReaderLevel, Category } from '../types';
+import type { ArticleSettings as Settings, Tone, ReaderLevel, Category, Template } from '../types';
 
 interface Props {
   settings: Settings;
   onChange: (settings: Settings) => void;
   onGenerate: () => void;
   isGenerating: boolean;
+  templates: Template[];
+  selectedTemplateId: string;
+  onTemplateChange: (templateId: string) => void;
 }
 
 const TONE_OPTIONS: { value: Tone; label: string }[] = [
@@ -27,10 +30,12 @@ const CATEGORY_OPTIONS: { value: Category; label: string }[] = [
   { value: 'entertainment', label: 'エンタメ' },
 ];
 
-export default function ArticleSettingsPanel({ settings, onChange, onGenerate, isGenerating }: Props) {
+export default function ArticleSettingsPanel({ settings, onChange, onGenerate, isGenerating, templates, selectedTemplateId, onTemplateChange }: Props) {
   const update = (field: keyof Settings, value: string | number) => {
     onChange({ ...settings, [field]: value });
   };
+
+  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
 
   return (
     <div className="settings-section">
@@ -118,6 +123,29 @@ export default function ArticleSettingsPanel({ settings, onChange, onGenerate, i
               </div>
             </div>
 
+            {templates.length > 0 && (
+              <div className="form-group" style={{ marginTop: 16 }}>
+                <label className="form-label">📄 テンプレート（フッター）</label>
+                <select
+                  className="form-select"
+                  value={selectedTemplateId}
+                  onChange={(e) => onTemplateChange(e.target.value)}
+                  disabled={isGenerating}
+                >
+                  <option value="">テンプレートなし</option>
+                  {templates.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                {selectedTemplate && (
+                  <div className="template-preview">
+                    {selectedTemplate.content.length > 120
+                      ? selectedTemplate.content.slice(0, 120) + '…'
+                      : selectedTemplate.content}
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
         </div>

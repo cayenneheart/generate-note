@@ -10,6 +10,7 @@ import HistorySidebar from './components/HistorySidebar';
 import { PIPELINE_STEPS } from './mockData';
 import { runFullPipeline } from './lib/pipeline';
 import { useHistory } from './hooks/useHistory';
+import { useTemplates } from './hooks/useTemplates';
 import type { ArticleSettings, PipelineStep, GenerationResult, HistoryItem } from './types';
 
 type AppState = 'idle' | 'generating' | 'complete' | 'error';
@@ -35,6 +36,8 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { history, addItem, removeItem, clearAll } = useHistory();
+  const { templates, addTemplate, updateTemplate, removeTemplate } = useTemplates();
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   const handleGenerate = useCallback(async () => {
     if (!settings.keyword.trim()) return;
@@ -67,6 +70,14 @@ export default function App() {
       });
 
       if (!cancelRef.current) {
+        // Append template footer if selected
+        const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+        if (selectedTemplate) {
+          const separator = '\n\n---\n\n';
+          generationResult.article.contentMarkdown += separator + selectedTemplate.content;
+          generationResult.article.content += `<hr/><div class="template-footer">${selectedTemplate.content.replace(/\n/g, '<br/>')}</div>`;
+        }
+
         setResult(generationResult);
         setCurrentMessage('');
         setProgress(100);
@@ -80,7 +91,7 @@ export default function App() {
       setAppState('error');
       setCurrentMessage('');
     }
-  }, [settings, addItem]);
+  }, [settings, addItem, templates, selectedTemplateId]);
 
   const handleHistorySelect = useCallback((item: HistoryItem) => {
     setSettings(item.settings);
@@ -103,6 +114,10 @@ export default function App() {
         onSelect={handleHistorySelect}
         onDelete={removeItem}
         onClearAll={clearAll}
+        templates={templates}
+        onAddTemplate={addTemplate}
+        onUpdateTemplate={updateTemplate}
+        onDeleteTemplate={removeTemplate}
       />
 
       <div className="main-layout">
@@ -113,6 +128,9 @@ export default function App() {
             onChange={setSettings}
             onGenerate={handleGenerate}
             isGenerating={appState === 'generating'}
+            templates={templates}
+            selectedTemplateId={selectedTemplateId}
+            onTemplateChange={setSelectedTemplateId}
           />
         </div>
 

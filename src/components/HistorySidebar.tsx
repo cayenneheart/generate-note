@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import type { HistoryItem } from '../types';
+import { useState, type ReactNode } from 'react';
+import type { HistoryItem, Template } from '../types';
+import TemplateManager from './TemplateManager';
+
+type Tab = 'history' | 'templates';
 
 interface Props {
   isOpen: boolean;
@@ -8,6 +11,10 @@ interface Props {
   onSelect: (item: HistoryItem) => void;
   onDelete: (id: string) => void;
   onClearAll: () => void;
+  templates: Template[];
+  onAddTemplate: (name: string, content: string) => void;
+  onUpdateTemplate: (id: string, name: string, content: string) => void;
+  onDeleteTemplate: (id: string) => void;
 }
 
 function formatDate(iso: string): string {
@@ -23,8 +30,12 @@ function truncate(text: string, max: number): string {
   return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
-export default function HistorySidebar({ isOpen, onClose, history, onSelect, onDelete, onClearAll }: Props) {
+export default function HistorySidebar({
+  isOpen, onClose, history, onSelect, onDelete, onClearAll,
+  templates, onAddTemplate, onUpdateTemplate, onDeleteTemplate,
+}: Props) {
   const [confirmClear, setConfirmClear] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('history');
 
   const handleClearAll = () => {
     if (confirmClear) {
@@ -34,6 +45,62 @@ export default function HistorySidebar({ isOpen, onClose, history, onSelect, onD
       setConfirmClear(true);
       setTimeout(() => setConfirmClear(false), 3000);
     }
+  };
+
+  const renderHistoryContent = (): ReactNode => {
+    if (history.length === 0) {
+      return (
+        <div className="sidebar-empty">
+          <div className="sidebar-empty-icon">📝</div>
+          <div className="sidebar-empty-text">まだ履歴がありません</div>
+          <div className="sidebar-empty-hint">記事を生成すると自動で保存されます</div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="sidebar-actions">
+          <span className="sidebar-count">{history.length}件の記録</span>
+          <button
+            className={`sidebar-clear-btn ${confirmClear ? 'confirm' : ''}`}
+            onClick={handleClearAll}
+          >
+            {confirmClear ? '本当に全削除？' : '全て削除'}
+          </button>
+        </div>
+
+        <div className="sidebar-list">
+          {history.map(item => (
+            <div
+              key={item.id}
+              className="history-card"
+              onClick={() => { onSelect(item); onClose(); }}
+            >
+              <div className="history-card-header">
+                <span className="history-keyword">{item.keyword}</span>
+                <span className="history-date">{formatDate(item.createdAt)}</span>
+              </div>
+              <div className="history-title">
+                {truncate(item.result.article.title, 60)}
+              </div>
+              <div className="history-meta">
+                <span className="history-tag">{item.settings.tone === 'friendly' ? 'フレンドリー' : item.settings.tone === 'polite' ? '丁寧' : '専門的'}</span>
+                <span className="history-tag">{item.settings.readerLevel === 'beginner' ? '初心者' : item.settings.readerLevel === 'intermediate' ? '中級者' : '上級者'}</span>
+                <span className="history-tag">{item.settings.wordCount.toLocaleString()}文字</span>
+              </div>
+              <button
+                className="history-delete-btn"
+                onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+                aria-label="削除"
+              >
+                🗑
+              </button>
+            </div>
+          ))}
+        </div>
+      </>
+    );
   };
 
   return (
@@ -47,59 +114,37 @@ export default function HistorySidebar({ isOpen, onClose, history, onSelect, onD
       {/* Sidebar */}
       <aside className={`history-sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h2 className="sidebar-title">📋 プロジェクト履歴</h2>
+          <h2 className="sidebar-title">メニュー</h2>
           <button className="sidebar-close" onClick={onClose} aria-label="閉じる">✕</button>
         </div>
 
-        {history.length === 0 ? (
-          <div className="sidebar-empty">
-            <div className="sidebar-empty-icon">📝</div>
-            <div className="sidebar-empty-text">まだ履歴がありません</div>
-            <div className="sidebar-empty-hint">記事を生成すると自動で保存されます</div>
-          </div>
-        ) : (
-          <>
-            <div className="sidebar-actions">
-              <span className="sidebar-count">{history.length}件の記録</span>
-              <button
-                className={`sidebar-clear-btn ${confirmClear ? 'confirm' : ''}`}
-                onClick={handleClearAll}
-              >
-                {confirmClear ? '本当に全削除？' : '全て削除'}
-              </button>
-            </div>
+        {/* Tabs */}
+        <div className="sidebar-tabs">
+          <button
+            className={`sidebar-tab ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            📋 履歴
+          </button>
+          <button
+            className={`sidebar-tab ${activeTab === 'templates' ? 'active' : ''}`}
+            onClick={() => setActiveTab('templates')}
+          >
+            📄 テンプレート
+          </button>
+        </div>
 
-            <div className="sidebar-list">
-              {history.map(item => (
-                <div
-                  key={item.id}
-                  className="history-card"
-                  onClick={() => { onSelect(item); onClose(); }}
-                >
-                  <div className="history-card-header">
-                    <span className="history-keyword">{item.keyword}</span>
-                    <span className="history-date">{formatDate(item.createdAt)}</span>
-                  </div>
-                  <div className="history-title">
-                    {truncate(item.result.article.title, 60)}
-                  </div>
-                  <div className="history-meta">
-                    <span className="history-tag">{item.settings.tone === 'friendly' ? 'フレンドリー' : item.settings.tone === 'polite' ? '丁寧' : '専門的'}</span>
-                    <span className="history-tag">{item.settings.readerLevel === 'beginner' ? '初心者' : item.settings.readerLevel === 'intermediate' ? '中級者' : '上級者'}</span>
-                    <span className="history-tag">{item.settings.wordCount.toLocaleString()}文字</span>
-                  </div>
-                  <button
-                    className="history-delete-btn"
-                    onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                    aria-label="削除"
-                  >
-                    🗑
-                  </button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {/* Tab Content */}
+        <div className="sidebar-tab-content">
+          {activeTab === 'history' ? renderHistoryContent() : (
+            <TemplateManager
+              templates={templates}
+              onAdd={onAddTemplate}
+              onUpdate={onUpdateTemplate}
+              onDelete={onDeleteTemplate}
+            />
+          )}
+        </div>
       </aside>
     </>
   );
