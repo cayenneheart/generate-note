@@ -151,3 +151,12 @@ export interface GenerationResult {
   images: GeneratedImage[];
   xPosts: XPostSuggestions;
 }
+
+// ===== 履歴 =====
+export interface HistoryItem {
+  id: string;
+  keyword: string;
+  settings: ArticleSettings;
+  result: GenerationResult;
+  createdAt: string;
+}

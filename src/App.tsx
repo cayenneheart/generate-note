@@ -3,13 +3,14 @@ import Header from './components/Header';
 import ArticleSettingsPanel from './components/ArticleSettings';
 import GenerationStatus from './components/GenerationStatus';
 import ArticlePreview from './components/ArticlePreview';
-
 import DiagramPreview from './components/DiagramPreview';
 import FactCheckResults from './components/FactCheckResults';
 import XPostSuggestions from './components/XPostSuggestions';
+import HistorySidebar from './components/HistorySidebar';
 import { PIPELINE_STEPS } from './mockData';
 import { runFullPipeline } from './lib/pipeline';
-import type { ArticleSettings, PipelineStep, GenerationResult } from './types';
+import { useHistory } from './hooks/useHistory';
+import type { ArticleSettings, PipelineStep, GenerationResult, HistoryItem } from './types';
 
 type AppState = 'idle' | 'generating' | 'complete' | 'error';
 
@@ -31,6 +32,9 @@ export default function App() {
   const [result, setResult] = useState<GenerationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const cancelRef = useRef(false);
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { history, addItem, removeItem, clearAll } = useHistory();
 
   const handleGenerate = useCallback(async () => {
     if (!settings.keyword.trim()) return;
@@ -67,6 +71,8 @@ export default function App() {
         setCurrentMessage('');
         setProgress(100);
         setAppState('complete');
+        // Save to history
+        addItem(settings, generationResult);
       }
     } catch (err) {
       console.error('Pipeline error:', err);
@@ -74,11 +80,30 @@ export default function App() {
       setAppState('error');
       setCurrentMessage('');
     }
-  }, [settings]);
+  }, [settings, addItem]);
+
+  const handleHistorySelect = useCallback((item: HistoryItem) => {
+    setSettings(item.settings);
+    setResult(item.result);
+    setAppState('complete');
+    setProgress(100);
+    setSteps(PIPELINE_STEPS.map(s => ({ ...s, status: 'done' as const })));
+    setCurrentMessage('');
+    setError(null);
+  }, []);
 
   return (
     <div>
-      <Header />
+      <Header onMenuClick={() => setSidebarOpen(true)} />
+
+      <HistorySidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        history={history}
+        onSelect={handleHistorySelect}
+        onDelete={removeItem}
+        onClearAll={clearAll}
+      />
 
       <div className="main-layout">
         {/* Left Panel: Settings */}
@@ -131,7 +156,6 @@ export default function App() {
                     article={result.article}
                     metaDescription={result.structure.metaDescription}
                   />
-
                   <DiagramPreview diagrams={result.diagrams} />
                   <FactCheckResults result={result.factCheck} />
                   <XPostSuggestions posts={result.xPosts} />
