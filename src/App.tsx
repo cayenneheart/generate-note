@@ -122,7 +122,7 @@ export default function App() {
             <div className="empty-state">
               <div className="empty-icon">✍️</div>
               <div className="empty-text">キーワードを入力して「記事を生成する」を押してください</div>
-              <div className="empty-hint">GPT-4oが約60秒で記事・図解・SNS告知文まで一括生成</div>
+              <div className="empty-hint">GPT-4.1-miniが約60秒で記事・図解・SNS告知文まで一括生成</div>
             </div>
           ) : (
             <>
