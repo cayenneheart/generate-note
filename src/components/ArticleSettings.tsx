@@ -125,7 +125,7 @@ export default function ArticleSettingsPanel({ settings, onChange, onGenerate, i
 
             {templates.length > 0 && (
               <div className="form-group" style={{ marginTop: 16 }}>
-                <label className="form-label">📄 テンプレート（フッター）</label>
+                <label className="form-label">📄 テンプレート</label>
                 <select
                   className="form-select"
                   value={selectedTemplateId}
@@ -139,9 +139,12 @@ export default function ArticleSettingsPanel({ settings, onChange, onGenerate, i
                 </select>
                 {selectedTemplate && (
                   <div className="template-preview">
-                    {selectedTemplate.content.length > 120
-                      ? selectedTemplate.content.slice(0, 120) + '…'
-                      : selectedTemplate.content}
+                    {selectedTemplate.header && (
+                      <div><strong>📌 ヘッダー:</strong> {selectedTemplate.header.length > 60 ? selectedTemplate.header.slice(0, 60) + '…' : selectedTemplate.header}</div>
+                    )}
+                    {selectedTemplate.footer && (
+                      <div><strong>📎 フッター:</strong> {selectedTemplate.footer.length > 60 ? selectedTemplate.footer.slice(0, 60) + '…' : selectedTemplate.footer}</div>
+                    )}
                   </div>
                 )}
               </div>

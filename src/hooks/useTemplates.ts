@@ -27,20 +27,21 @@ export function useTemplates() {
     saveTemplates(templates);
   }, [templates]);
 
-  const addTemplate = useCallback((name: string, content: string) => {
+  const addTemplate = useCallback((name: string, header: string, footer: string) => {
     const item: Template = {
       id: `tmpl-${Date.now()}`,
       name,
-      content,
+      header,
+      footer,
       createdAt: new Date().toISOString(),
     };
     setTemplates(prev => [...prev, item]);
     return item;
   }, []);
 
-  const updateTemplate = useCallback((id: string, name: string, content: string) => {
+  const updateTemplate = useCallback((id: string, name: string, header: string, footer: string) => {
     setTemplates(prev => prev.map(t =>
-      t.id === id ? { ...t, name, content } : t
+      t.id === id ? { ...t, name, header, footer } : t
     ));
   }, []);
 

@@ -70,12 +70,17 @@ export default function App() {
       });
 
       if (!cancelRef.current) {
-        // Append template footer if selected
+        // Apply template header/footer if selected
         const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
         if (selectedTemplate) {
-          const separator = '\n\n---\n\n';
-          generationResult.article.contentMarkdown += separator + selectedTemplate.content;
-          generationResult.article.content += `<hr/><div class="template-footer">${selectedTemplate.content.replace(/\n/g, '<br/>')}</div>`;
+          if (selectedTemplate.header) {
+            generationResult.article.contentMarkdown = selectedTemplate.header + '\n\n' + generationResult.article.contentMarkdown;
+            generationResult.article.content = `<div class="template-header">${selectedTemplate.header.replace(/\n/g, '<br/>')}</div>\n` + generationResult.article.content;
+          }
+          if (selectedTemplate.footer) {
+            generationResult.article.contentMarkdown += '\n\n---\n\n' + selectedTemplate.footer;
+            generationResult.article.content += `<hr/><div class="template-footer">${selectedTemplate.footer.replace(/\n/g, '<br/>')}</div>`;
+          }
         }
 
         setResult(generationResult);

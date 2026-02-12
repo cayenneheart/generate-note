@@ -12,8 +12,8 @@ interface Props {
   onDelete: (id: string) => void;
   onClearAll: () => void;
   templates: Template[];
-  onAddTemplate: (name: string, content: string) => void;
-  onUpdateTemplate: (id: string, name: string, content: string) => void;
+  onAddTemplate: (name: string, header: string, footer: string) => void;
+  onUpdateTemplate: (id: string, name: string, header: string, footer: string) => void;
   onDeleteTemplate: (id: string) => void;
 }
 

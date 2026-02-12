@@ -2081,3 +2081,50 @@ body {
   color: var(--color-text-secondary);
   line-height: 1.8;
 }
+
+/* Template Header (in article output) */
+.template-header {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+}
+
+/* Template form field labels */
+.template-field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 12px 0 4px;
+}
+
+/* Template item section (header/footer preview in list) */
+.template-item-section {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.template-item-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-primary-light, #e8e0ff);
+  color: var(--color-primary, #6c5ce7);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.template-item-preview-text {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

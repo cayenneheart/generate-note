@@ -165,6 +165,7 @@ export interface HistoryItem {
 export interface Template {
   id: string;
   name: string;
-  content: string;
+  header: string;
+  footer: string;
   createdAt: string;
 }
