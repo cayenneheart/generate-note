@@ -9,10 +9,9 @@ export const PIPELINE_STEPS: PipelineStep[] = [
   { id: 3, name: '構成作成', description: '記事構成の作成', duration: 8, status: 'waiting', icon: '📝' },
   { id: 4, name: '記事執筆', description: '自然な日本語での記事生成', duration: 25, status: 'waiting', icon: '✍️' },
   { id: 5, name: 'ファクトチェック', description: '事実情報の自動検証', duration: 8, status: 'waiting', icon: '✅' },
-  { id: 6, name: '画像生成', description: 'アイキャッチ+記事内画像', duration: 15, status: 'waiting', icon: '🎨' },
-  { id: 7, name: '図解生成', description: 'Mermaid図解の自動作成', duration: 5, status: 'waiting', icon: '📈' },
-  { id: 8, name: 'X告知文', description: 'SNS投稿文の作成', duration: 7, status: 'waiting', icon: '📣' },
-  { id: 9, name: '出力', description: '全データの統合', duration: 2, status: 'waiting', icon: '📦' },
+  { id: 6, name: '図解生成', description: 'Mermaid図解の自動作成', duration: 5, status: 'waiting', icon: '📈' },
+  { id: 7, name: 'X告知文', description: 'SNS投稿文の作成', duration: 7, status: 'waiting', icon: '📣' },
+  { id: 8, name: '出力', description: '全データの統合', duration: 2, status: 'waiting', icon: '📦' },
 ];
 
 export function generateMockResult(keyword: string): GenerationResult {

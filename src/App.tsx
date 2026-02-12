@@ -3,14 +3,15 @@ import Header from './components/Header';
 import ArticleSettingsPanel from './components/ArticleSettings';
 import GenerationStatus from './components/GenerationStatus';
 import ArticlePreview from './components/ArticlePreview';
-import ImageGallery from './components/ImageGallery';
+
 import DiagramPreview from './components/DiagramPreview';
 import FactCheckResults from './components/FactCheckResults';
 import XPostSuggestions from './components/XPostSuggestions';
-import { PIPELINE_STEPS, generateMockResult } from './mockData';
+import { PIPELINE_STEPS } from './mockData';
+import { runFullPipeline } from './lib/pipeline';
 import type { ArticleSettings, PipelineStep, GenerationResult } from './types';
 
-type AppState = 'idle' | 'generating' | 'complete';
+type AppState = 'idle' | 'generating' | 'complete' | 'error';
 
 const DEFAULT_SETTINGS: ArticleSettings = {
   keyword: '',
@@ -28,57 +29,52 @@ export default function App() {
   const [progress, setProgress] = useState(0);
   const [currentMessage, setCurrentMessage] = useState('');
   const [result, setResult] = useState<GenerationResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const cancelRef = useRef(false);
 
-  const runPipeline = useCallback(async () => {
+  const handleGenerate = useCallback(async () => {
+    if (!settings.keyword.trim()) return;
     cancelRef.current = false;
     setAppState('generating');
     setResult(null);
+    setError(null);
     setProgress(0);
 
     const freshSteps = PIPELINE_STEPS.map(s => ({ ...s, status: 'waiting' as const }));
     setSteps(freshSteps);
 
-    const totalDuration = PIPELINE_STEPS.reduce((sum, s) => sum + s.duration, 0);
-    let elapsed = 0;
+    const totalSteps = PIPELINE_STEPS.length;
 
-    for (let i = 0; i < PIPELINE_STEPS.length; i++) {
-      if (cancelRef.current) return;
+    try {
+      const generationResult = await runFullPipeline(settings, (stepIndex, status, message) => {
+        if (cancelRef.current) return;
 
-      const step = PIPELINE_STEPS[i];
+        setSteps(prev => prev.map((s, idx) => {
+          if (idx === stepIndex) return { ...s, status };
+          if (idx < stepIndex && s.status !== 'done') return { ...s, status: 'done' };
+          return s;
+        }));
 
-      // Update step to running
-      setSteps(prev => prev.map((s, idx) =>
-        idx === i ? { ...s, status: 'running' } : s
-      ));
-      setCurrentMessage(`${step.description}...`);
+        if (message) setCurrentMessage(message);
 
-      // Simulate processing with faster timing (real async would call APIs)
-      const simDuration = Math.min(step.duration * 100, 2500); // scale down for demo
-      await new Promise(resolve => setTimeout(resolve, simDuration));
+        if (status === 'done') {
+          setProgress(((stepIndex + 1) / totalSteps) * 100);
+        }
+      });
 
-      elapsed += step.duration;
-      setProgress((elapsed / totalDuration) * 100);
-
-      // Update step to done
-      setSteps(prev => prev.map((s, idx) =>
-        idx === i ? { ...s, status: 'done' } : s
-      ));
+      if (!cancelRef.current) {
+        setResult(generationResult);
+        setCurrentMessage('');
+        setProgress(100);
+        setAppState('complete');
+      }
+    } catch (err) {
+      console.error('Pipeline error:', err);
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+      setAppState('error');
+      setCurrentMessage('');
     }
-
-    // Generate result
-    const keyword = settings.keyword || 'Obsidian';
-    const mockResult = generateMockResult(keyword);
-    setResult(mockResult);
-    setCurrentMessage('');
-    setProgress(100);
-    setAppState('complete');
-  }, [settings.keyword]);
-
-  const handleGenerate = useCallback(() => {
-    if (!settings.keyword.trim()) return;
-    runPipeline();
-  }, [settings.keyword, runPipeline]);
+  }, [settings]);
 
   return (
     <div>
@@ -101,7 +97,7 @@ export default function App() {
             <div className="empty-state">
               <div className="empty-icon">✍️</div>
               <div className="empty-text">キーワードを入力して「記事を生成する」を押してください</div>
-              <div className="empty-hint">約75秒で記事・図解・画像・SNS告知文まで一括生成</div>
+              <div className="empty-hint">GPT-4oが約60秒で記事・図解・SNS告知文まで一括生成</div>
             </div>
           ) : (
             <>
@@ -111,24 +107,33 @@ export default function App() {
                 currentMessage={currentMessage}
               />
 
+              {appState === 'error' && error && (
+                <div style={{
+                  background: '#fee2e2',
+                  border: '1px solid #fca5a5',
+                  borderRadius: 12,
+                  padding: '20px 24px',
+                  color: '#991b1b',
+                  fontSize: '0.9rem',
+                }}>
+                  <strong>⚠️ エラー:</strong> {error}
+                  <div style={{ marginTop: 8, fontSize: '0.82rem', color: '#b91c1c' }}>
+                    APIキーが正しく設定されているか確認してください。
+                    <br />
+                    .env.local に VITE_OPENAI_API_KEY を設定後、開発サーバーを再起動してください。
+                  </div>
+                </div>
+              )}
+
               {appState === 'complete' && result && (
                 <div className="results-container">
-                  {/* Step 4: 記事本文 + メタディスクリプション */}
                   <ArticlePreview
                     article={result.article}
                     metaDescription={result.structure.metaDescription}
                   />
 
-                  {/* Step 5: 記事内画像 */}
-                  <ImageGallery images={result.images} />
-
-                  {/* Step 6: 図解 */}
                   <DiagramPreview diagrams={result.diagrams} />
-
-                  {/* Step 7: ファクトチェック */}
                   <FactCheckResults result={result.factCheck} />
-
-                  {/* Step 8: X投稿案 */}
                   <XPostSuggestions posts={result.xPosts} />
                 </div>
               )}

@@ -118,17 +118,7 @@ export default function ArticleSettingsPanel({ settings, onChange, onGenerate, i
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">画像テーマ</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="キーワードと同じテーマが使用されます"
-                value={settings.imageTheme}
-                onChange={(e) => update('imageTheme', e.target.value)}
-                disabled={isGenerating}
-              />
-            </div>
+
           </div>
         </div>
       </div>
