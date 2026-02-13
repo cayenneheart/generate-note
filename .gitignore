@@ -22,3 +22,10 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Server
+dist-server/
+server/.x-storage-state.json
+server/.x-cookies.json
+server/.x-chrome-profile/
+server/.x-debug/

@@ -25,6 +25,20 @@ export interface PipelineStep {
   icon: string;
 }
 
+// ===== Webリサーチ結果 =====
+export interface WebResearchSource {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+export interface WebResearchResult {
+  keyFindings: string[];     // 検索で見つかった要点リスト
+  sources: WebResearchSource[]; // 情報源
+  competitorSummary: string; // 競合記事の傾向
+  rawSummary: string;        // リサーチ全体のまとめ
+}
+
 // ===== SEO分析結果 =====
 export interface SeoAnalysis {
   searchIntent: string;
@@ -143,6 +157,7 @@ export interface XPostSuggestions {
 
 // ===== 生成結果全体 =====
 export interface GenerationResult {
+  webResearch: WebResearchResult;
   seoAnalysis: SeoAnalysis;
   structure: ArticleStructure;
   article: ArticleBody;

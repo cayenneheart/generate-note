@@ -1,3 +1,4 @@
+import { runWebResearch } from './steps/webResearch';
 import { runSeoAnalysis } from './steps/seoAnalysis';
 import { runArticleStructure } from './steps/structureCreation';
 import { runArticleBody } from './steps/articleWriting';
@@ -12,24 +13,24 @@ export async function runFullPipeline(
   settings: ArticleSettings,
   onStep: StepCallback
 ): Promise<GenerationResult> {
-  // Step 1: Research + SEO Analysis
-  onStep(0, 'running', 'キーワード調査・検索意図分析...');
-  const seoAnalysis = await runSeoAnalysis(settings);
-  onStep(0, 'done', '');
+  // Step 1: Web Research (実際にWebを検索してリサーチ)
+  onStep(0, 'running', 'Web検索でキーワードをリサーチ中...');
+  const webResearch = await runWebResearch(settings);
+  onStep(0, 'done', `${webResearch.sources.length}件の情報源を取得`);
 
-  // Step 2: SEO (continued)
-  onStep(1, 'running', 'SEO最適化分析中...');
-  await new Promise(r => setTimeout(r, 500));
+  // Step 2: SEO Analysis (リサーチ結果を元に分析)
+  onStep(1, 'running', 'リサーチ結果をもとにSEO分析中...');
+  const seoAnalysis = await runSeoAnalysis(settings, webResearch);
   onStep(1, 'done', '');
 
-  // Step 3: Article Structure
-  onStep(2, 'running', '記事構成を作成中...');
-  const structure = await runArticleStructure(settings, seoAnalysis);
+  // Step 3: Article Structure (リサーチ結果を反映した構成)
+  onStep(2, 'running', 'リサーチに基づいて記事構成を作成中...');
+  const structure = await runArticleStructure(settings, seoAnalysis, webResearch);
   onStep(2, 'done', '');
 
-  // Step 4: Article Body
-  onStep(3, 'running', '自然な日本語で記事を執筆中...');
-  const article = await runArticleBody(settings, structure);
+  // Step 4: Article Body (リサーチ結果を元に執筆)
+  onStep(3, 'running', 'リサーチ結果を元に記事を執筆中...');
+  const article = await runArticleBody(settings, structure, webResearch);
   onStep(3, 'done', '');
 
   // Step 5: Fact Check
@@ -53,6 +54,7 @@ export async function runFullPipeline(
   onStep(7, 'done', '');
 
   return {
+    webResearch,
     seoAnalysis,
     structure,
     article,

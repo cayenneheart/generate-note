@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import type { HistoryItem, Template } from '../types';
+import type { TopicStockItem } from '../hooks/useTopicStock';
 import TemplateManager from './TemplateManager';
+import TopicCollector from './TopicCollector';
 
-type Tab = 'history' | 'templates';
+type Tab = 'history' | 'templates' | 'topics';
 
 interface Props {
   isOpen: boolean;
@@ -15,6 +17,17 @@ interface Props {
   onAddTemplate: (name: string, header: string, footer: string) => void;
   onUpdateTemplate: (id: string, name: string, header: string, footer: string) => void;
   onDeleteTemplate: (id: string) => void;
+  // Topic props
+  topicStock: TopicStockItem[];
+  topicStrategy: string;
+  onTopicStrategyChange: (value: string) => void;
+  isTopicCollecting: boolean;
+  topicError: string;
+  onTopicCollect: () => void;
+  onTopicLogin: (authToken: string, ct0?: string) => Promise<void>;
+  onTopicUseKeyword: (keyword: string, topicId: string) => void;
+  onTopicRemove: (id: string) => void;
+  onTopicClearAll: () => void;
 }
 
 function formatDate(iso: string): string {
@@ -33,6 +46,9 @@ function truncate(text: string, max: number): string {
 export default function HistorySidebar({
   isOpen, onClose, history, onSelect, onDelete, onClearAll,
   templates, onAddTemplate, onUpdateTemplate, onDeleteTemplate,
+  topicStock, topicStrategy, onTopicStrategyChange,
+  isTopicCollecting, topicError, onTopicCollect, onTopicLogin,
+  onTopicUseKeyword, onTopicRemove, onTopicClearAll,
 }: Props) {
   const [confirmClear, setConfirmClear] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('history');
@@ -103,6 +119,40 @@ export default function HistorySidebar({
     );
   };
 
+  const renderTabContent = (): ReactNode => {
+    switch (activeTab) {
+      case 'history':
+        return renderHistoryContent();
+      case 'templates':
+        return (
+          <TemplateManager
+            templates={templates}
+            onAdd={onAddTemplate}
+            onUpdate={onUpdateTemplate}
+            onDelete={onDeleteTemplate}
+          />
+        );
+      case 'topics':
+        return (
+          <TopicCollector
+            stock={topicStock}
+            strategy={topicStrategy}
+            onStrategyChange={onTopicStrategyChange}
+            isCollecting={isTopicCollecting}
+            error={topicError}
+            onCollect={onTopicCollect}
+            onLogin={onTopicLogin}
+            onUseKeyword={(keyword, topicId) => {
+              onTopicUseKeyword(keyword, topicId);
+              onClose();
+            }}
+            onRemove={onTopicRemove}
+            onClearAll={onTopicClearAll}
+          />
+        );
+    }
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -130,20 +180,19 @@ export default function HistorySidebar({
             className={`sidebar-tab ${activeTab === 'templates' ? 'active' : ''}`}
             onClick={() => setActiveTab('templates')}
           >
-            📄 テンプレート
+            📄 テンプレ
+          </button>
+          <button
+            className={`sidebar-tab ${activeTab === 'topics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('topics')}
+          >
+            💡 ネタ
           </button>
         </div>
 
         {/* Tab Content */}
         <div className="sidebar-tab-content">
-          {activeTab === 'history' ? renderHistoryContent() : (
-            <TemplateManager
-              templates={templates}
-              onAdd={onAddTemplate}
-              onUpdate={onUpdateTemplate}
-              onDelete={onDeleteTemplate}
-            />
-          )}
+          {renderTabContent()}
         </div>
       </aside>
     </>

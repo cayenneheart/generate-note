@@ -16,6 +16,17 @@ export const PIPELINE_STEPS: PipelineStep[] = [
 
 export function generateMockResult(keyword: string): GenerationResult {
   return {
+    webResearch: {
+      keyFindings: [
+        `${keyword}の市場規模は拡大傾向`,
+        `${keyword}に関する最新の調査データ`,
+      ],
+      sources: [
+        { title: 'サンプル記事', url: 'https://example.com', snippet: 'サンプル' },
+      ],
+      competitorSummary: '上位記事は具体的な事例と数字を含む内容が多い。',
+      rawSummary: `${keyword}についてのリサーチ結果サマリー。`,
+    },
     seoAnalysis: {
       searchIntent: `「${keyword}」に関する基本的な情報を求める検索意図。初心者向けの解説記事が有効。`,
       relatedKeywords: [

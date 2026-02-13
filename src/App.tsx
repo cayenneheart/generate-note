@@ -11,6 +11,7 @@ import { PIPELINE_STEPS } from './mockData';
 import { runFullPipeline } from './lib/pipeline';
 import { useHistory } from './hooks/useHistory';
 import { useTemplates } from './hooks/useTemplates';
+import { useTopicStock } from './hooks/useTopicStock';
 import type { ArticleSettings, PipelineStep, GenerationResult, HistoryItem } from './types';
 
 type AppState = 'idle' | 'generating' | 'complete' | 'error';
@@ -38,6 +39,12 @@ export default function App() {
   const { history, addItem, removeItem, clearAll } = useHistory();
   const { templates, addTemplate, updateTemplate, removeTemplate } = useTemplates();
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const topicStock = useTopicStock();
+
+  const handleUseTopicKeyword = useCallback((keyword: string, topicId: string) => {
+    setSettings(prev => ({ ...prev, keyword }));
+    topicStock.markUsed(topicId);
+  }, [topicStock]);
 
   const handleGenerate = useCallback(async () => {
     if (!settings.keyword.trim()) return;
@@ -123,6 +130,16 @@ export default function App() {
         onAddTemplate={addTemplate}
         onUpdateTemplate={updateTemplate}
         onDeleteTemplate={removeTemplate}
+        topicStock={topicStock.stock}
+        topicStrategy={topicStock.strategy}
+        onTopicStrategyChange={topicStock.setStrategy}
+        isTopicCollecting={topicStock.isCollecting}
+        topicError={topicStock.error}
+        onTopicCollect={topicStock.collect}
+        onTopicLogin={topicStock.login}
+        onTopicUseKeyword={handleUseTopicKeyword}
+        onTopicRemove={topicStock.removeItem}
+        onTopicClearAll={topicStock.clearAll}
       />
 
       <div className="main-layout">

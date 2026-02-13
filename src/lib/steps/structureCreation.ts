@@ -1,10 +1,13 @@
 import { chatCompletion } from '../openai';
-import type { ArticleSettings, SeoAnalysis, ArticleStructure } from '../../types';
+import type { ArticleSettings, SeoAnalysis, ArticleStructure, WebResearchResult } from '../../types';
 
 export async function runArticleStructure(
   settings: ArticleSettings,
-  seo: SeoAnalysis
+  seo: SeoAnalysis,
+  research: WebResearchResult
 ): Promise<ArticleStructure> {
+  const findingsText = research.keyFindings.map((f, i) => `${i + 1}. ${f}`).join('\n');
+
   const prompt = `あなたはnoteの人気ライターです。以下の情報を元に、SEO最適化された記事の構成を作成してください。
 
 キーワード: ${settings.keyword}
@@ -13,6 +16,14 @@ export async function runArticleStructure(
 目安文字数: ${settings.wordCount}文字
 検索意図: ${seo.searchIntent}
 関連キーワード: ${seo.relatedKeywords.join(', ')}
+
+## リサーチで判明した重要ポイント
+${findingsText}
+
+## 競合記事の傾向
+${research.competitorSummary}
+
+上記のリサーチ結果を活かした構成にしてください。検索で得られた具体的な情報を各セクションに盛り込めるよう設計してください。
 
 以下のJSON形式で回答してください:
 {
@@ -27,7 +38,7 @@ export async function runArticleStructure(
     {"level": 2, "text": "よくある質問"}
   ],
   "faq": [
-    {"question": "質問1", "answer": "回答1"},
+    {"question": "質問1", "answer": "回答1（リサーチ結果に基づいた具体的な回答）"},
     {"question": "質問2", "answer": "回答2"},
     {"question": "質問3", "answer": "回答3"}
   ],

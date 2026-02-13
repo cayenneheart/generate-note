@@ -1,11 +1,14 @@
 import { chatCompletion } from '../openai';
-import type { ArticleSettings, ArticleStructure, ArticleBody } from '../../types';
+import type { ArticleSettings, ArticleStructure, ArticleBody, WebResearchResult } from '../../types';
 
 export async function runArticleBody(
   settings: ArticleSettings,
-  structure: ArticleStructure
+  structure: ArticleStructure,
+  research: WebResearchResult
 ): Promise<ArticleBody> {
   const headingsText = structure.headings.map(h => `${'#'.repeat(h.level)} ${h.text}`).join('\n');
+  const findingsText = research.keyFindings.map((f, i) => `${i + 1}. ${f}`).join('\n');
+  const sourcesText = research.sources.slice(0, 8).map(s => `- [${s.title}](${s.url})`).join('\n');
 
   const prompt = `# 役割
 あなたは日本語のプロ編集者兼ライターです。読者が「人が書いた」と感じる自然な日本語で、noteの記事を執筆してください。
@@ -23,7 +26,17 @@ ${headingsText}
 # FAQ
 ${structure.faq.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n')}
 
+# ★ Web検索で得られたリサーチ結果（これを必ず記事に反映すること）
+${findingsText}
+
+# 参考情報源
+${sourcesText}
+
+# リサーチの全体まとめ
+${research.rawSummary.slice(0, 2000)}
+
 # 厳守する文章ルール
+- **リサーチ結果の具体的な情報を記事に反映する**。上記の要点にある数字・事例・データを積極的に引用すること
 - AIっぽさを完全に消すこと。テンプレ感、説明書感、記号過多、過剰な丁寧さ、逃げ文句、抽象語の空回りを排除
 - 完璧すぎる構成を少し崩す。「会話→説明→共感」という自然なリズムを優先
 - 感情の起伏を作る。失敗談・驚き・発見といった感情の変化を意図的に混ぜる
@@ -43,7 +56,7 @@ ${structure.faq.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n')}
 }`;
 
   const result = await chatCompletion<{ content: string; contentMarkdown: string }>(
-    '日本語のプロ編集者兼ライターです。AIっぽさのない自然な日本語で執筆します。JSON形式で回答してください。',
+    '日本語のプロ編集者兼ライターです。Web検索で得たリサーチ結果を元に、AIっぽさのない自然な日本語で執筆します。JSON形式で回答してください。',
     prompt
   );
 
